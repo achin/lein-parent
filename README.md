@@ -20,7 +20,7 @@ Specify a parent in your project.clj and which properites to inherit from it as
 follows.
 
     :parent {:project \"../project.clj\"
-             :inherit [:dependencies :repositories [:profiles :dev]]}"
+             :inherit [:dependencies :repositories [:profiles :dev]]}
 
 Inherited properites may be either keywords or sequences of keywords. These values
 are used to select which properites from your parent to merge into your project.
