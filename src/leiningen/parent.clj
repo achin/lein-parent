@@ -14,6 +14,20 @@
       (map (juxt identity (partial get-in m)))
       (reduce (partial apply assoc-in) {}))))
 
+(defn is-absolute?
+  [path]
+  (.isAbsolute (java.io.File. path)))
+
+(defn make-absolute
+  [root path]
+  (.getAbsolutePath (java.io.File. root path)))
+
+(defn resolve-path
+  [root path]
+  (if (is-absolute? path)
+    path
+    (make-absolute root path)))
+
 (defn parent-properties
   [path ks]
   (let [parent-proj (project/init-project (project/read path))]
@@ -22,7 +36,8 @@
 (defn inherited-properties
   [project]
   (when-let [parent-project (:parent-project project)]
-    (let [{:keys [path inherit]} parent-project]
+    (let [{:keys [path inherit]} parent-project
+          path (resolve-path (:root project) path)]
       (parent-properties path inherit))))
 
 (defn parent
