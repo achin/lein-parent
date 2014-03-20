@@ -5,10 +5,10 @@
   path is in ksseq. Similar to select-keys except each value in ksseq is either
   a single key or sequence of keys."
   [m ksseq]
-  (letfn [(ensure-vector [x]
+  (letfn [(ensure-sequence [x]
             (if (sequential? x) x (vector x))) ]
     (->> ksseq
-      (map ensure-vector)
+      (map ensure-sequence)
       (map (juxt identity (partial get-in m)))
       (reduce (partial apply assoc-in) {}))))
 
