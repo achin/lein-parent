@@ -1,26 +1,33 @@
 # lein-parent
 
-A Leiningen plugin to do many wonderful things.
+A Leiningen plugin for inheriting properties from a parent project.
+
+This plugin is useful when you have a series of related projects that all share
+some set of properties and want to avoid duplicating the values across
+projects. e.g. you have several projects that all share the same Maven private
+repository information.
 
 ## Usage
 
-FIXME: Use this for user-level plugins:
-
-Put `[lein-parent "0.1.0-SNAPSHOT"]` into the `:plugins` vector of your
-`:user` profile, or if you are on Leiningen 1.x do `lein plugin install
-lein-parent 0.1.0-SNAPSHOT`.
-
-FIXME: Use this for project-level plugins:
+Use this for project-level plugins:
 
 Put `[lein-parent "0.1.0-SNAPSHOT"]` into the `:plugins` vector of your project.clj.
 
-FIXME: and add an example usage that actually makes sense:
+Specify a parent in your project.clj and which properites to inherit from it as
+follows.
+
+    :parent {:project \"../project.clj\"
+             :inherit [:dependencies :repositories [:profiles :dev]]}"
+
+Inherited properites may be either keywords or sequences of keywords. These values
+are used to select which properites from your parent to merge into your project.
+To see the actual values of these properties, run:
 
     $ lein parent
 
 ## License
 
-Copyright © 2014 FIXME
+Copyright © 2014 Alex Chin
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
