@@ -7,6 +7,9 @@ some set of properties and want to avoid duplicating the values across
 projects. e.g. you have several projects that all share the same Maven private
 repository information.
 
+lein-parent is the conceptual reverse of
+[lein-sub](https://github.com/kumarshantanu/lein-sub).
+
 ## Usage
 
 Use this for project-level plugins:
