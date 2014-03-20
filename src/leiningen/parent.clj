@@ -15,9 +15,15 @@
       (reduce (partial apply assoc-in) {}))))
 
 (defn parent-properties
-  [path inherit]
+  [path ks]
   (let [parent-proj (project/init-project (project/read path))]
-    (select-keys-in parent-proj inherit)))
+    (select-keys-in parent-proj ks)))
+
+(defn inherited-properties
+  [project]
+  (when-let [parent-project (:parent-project project)]
+    (let [{:keys [path inherit]} parent-project]
+      (parent-properties path inherit))))
 
 (defn parent
   "Show project properties inherited from parent project
@@ -28,8 +34,9 @@ follows.
 :parent-project {:path \"../project.clj\"
                  :inherit [:dependencies :repositories [:profiles :dev]]}"
   [project & args]
-  (if-let [parent-project (:parent-project project)]
-    (let [{:keys [path inherit]} parent-project]
-      (printf "Inheriting properties %s from %s\n\n" inherit path)
-      (pp/pprint (parent-properties path inherit)))
+  (if-let [inherited (inherited-properties project)]
+    (do (printf "Inheriting properties %s from %s\n\n"
+                (get-in project [:parent-project :inherit])
+                (get-in project [:parent-project :path]))
+        (pp/pprint inherited))
     (println "No parent project specified")))
