@@ -23,7 +23,7 @@ follows.
              :inherit [:dependencies :repositories [:profiles :dev]]}
 
 Inherited properites may be either keywords or sequences of keywords. These values
-are used to select which properites from your parent to merge into your project.
+are used to select which properties from your parent to merge into your project.
 To see the actual values of these properties, run:
 
     $ lein parent
