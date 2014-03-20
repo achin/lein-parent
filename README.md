@@ -17,7 +17,7 @@ Put `[lein-parent "0.2.0"]` into the `:plugins` vector of your project.clj.
 Specify a parent in your project.clj and which properites to inherit from it as
 follows.
 
-    :parent-project {:path \"../project.clj\"
+    :parent-project {:path "../project.clj"
                      :inherit [:dependencies :repositories [:profiles :dev]]}
 
 Inherited properties may be either keywords or sequences of keywords. These values
