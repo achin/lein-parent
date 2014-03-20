@@ -14,7 +14,7 @@ lein-parent is the conceptual reverse of
 
 Use this for project-level plugins:
 
-Put `[lein-parent "0.1.0-SNAPSHOT"]` into the `:plugins` vector of your project.clj.
+Put `[lein-parent "0.2.0"]` into the `:plugins` vector of your project.clj.
 
 Specify a parent in your project.clj and which properites to inherit from it as
 follows.
