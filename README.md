@@ -19,8 +19,8 @@ Put `[lein-parent "0.1.0-SNAPSHOT"]` into the `:plugins` vector of your project.
 Specify a parent in your project.clj and which properites to inherit from it as
 follows.
 
-    :parent {:project \"../project.clj\"
-             :inherit [:dependencies :repositories [:profiles :dev]]}
+    :parent-project {:path \"../project.clj\"
+                     :inherit [:dependencies :repositories [:profiles :dev]]}
 
 Inherited properites may be either keywords or sequences of keywords. These values
 are used to select which properties from your parent to merge into your project.

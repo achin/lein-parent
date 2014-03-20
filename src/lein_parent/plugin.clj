@@ -5,5 +5,7 @@
 (def meta-merge #'project/meta-merge)
 
 (defn middleware [project]
-  (let [{parent-proj-path :project inherit :inherit} (:parent project)]
-    (meta-merge project (parent/parent-properties parent-proj-path inherit))))
+  (if-let [parent-project (:parent-project project)]
+    (let [{:keys [path inherit]} parent-project]
+      (meta-merge project (parent/parent-properties path inherit)))
+    project))
