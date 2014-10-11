@@ -18,11 +18,15 @@ Specify a parent in your project.clj and which properites to inherit from it as
 follows.
 
     :parent-project {:path "../project.clj"
-                     :inherit [:dependencies :repositories [:profiles :dev]]}
+                     :inherit [:dependencies :repositories [:profiles :dev]]
+                     :only-deps [org.clojure/clojure com.stuartsierra/component]}
 
-Inherited properties may be either keywords or sequences of keywords. These values
-are used to select which properties from your parent to merge into your project.
-To see the actual values of these properties, run:
+Inherited properties may be either keywords or sequences of
+keywords. These values are used to select which properties from your
+parent to merge into your project. To select only specific
+dependencies, specify the first part of the dependency atoms in a
+sequence with :only-deps.  To see the actual values of these
+properties, run:
 
     $ lein parent
 
