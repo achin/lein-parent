@@ -14,7 +14,7 @@ lein-parent is the conceptual reverse of
 
 Put `[lein-parent "0.2.0"]` into the `:plugins` vector of your project.clj.
 
-Specify a parent in your project.clj and which properites to inherit from it as
+Specify a parent in your project.clj and which properties to inherit from it as
 follows.
 
     :parent-project {:path "../project.clj"
