@@ -1,6 +1,9 @@
 (ns leiningen.parent
   (:require [clojure.pprint :as pp]
-            [leiningen.core.project :as project]))
+            [leiningen.core.project :as project]
+            [cemerick.pomegranate.aether :as aether])
+  (:import (java.util.zip ZipFile)
+           (java.io InputStreamReader)))
 
 (defn ensure-sequence
   [x]
@@ -41,9 +44,27 @@
     path
     (make-absolute root path)))
 
+(defn resolve-project-from-coords
+  [coords]
+  (let [resolved-parent-artifact (first (aether/resolve-artifacts :coordinates [coords]))
+        artifact-jar (:file (meta resolved-parent-artifact))
+        artifact-zip (ZipFile. artifact-jar)]
+    (project/init-project (project/read (InputStreamReader. (.getInputStream
+                                          artifact-zip
+                                          (.getEntry artifact-zip "project.clj")))))))
+
 (defn get-parent-project
-  [path]
-  (project/init-project (project/read path)))
+  [project {:keys [path coords]}]
+  (cond
+    coords
+    (resolve-project-from-coords coords)
+
+    path
+    (let [path (resolve-path (:root project) path)]
+      (project/init-project (project/read path)))
+
+    :else
+    (throw (IllegalArgumentException. "parent-project configuration must include either 'coords' or 'path'"))))
 
 (defn parent-properties
   [proj ks]
@@ -52,10 +73,8 @@
 (defn inherited-properties
   [project]
   (when-let [parent-project (:parent-project project)]
-    (let [{:keys [path inherit only-deps]} parent-project
-          path (resolve-path (:root project) path)
-          proj (get-parent-project path)]
-      (-> proj
+    (let [{:keys [inherit only-deps]} parent-project]
+      (-> (get-parent-project project parent-project)
           (parent-properties inherit)
           (filter-deps only-deps)))))
 
@@ -72,6 +91,7 @@ follows.
   (if-let [inherited (inherited-properties project)]
     (do (printf "Inheriting properties %s from %s\n\n"
                 (get-in project [:parent-project :inherit])
-                (get-in project [:parent-project :path]))
+                (get-in project [:parent-project :coords]
+                        (get-in project [:parent-project :path])))
         (pp/pprint inherited))
     (println "No parent project specified")))
