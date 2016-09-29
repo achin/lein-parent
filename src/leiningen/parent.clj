@@ -1,6 +1,7 @@
 (ns leiningen.parent
   (:require [clojure.pprint :as pp]
             [leiningen.core.project :as project]
+            [leiningen.core.main :as main]
             [cemerick.pomegranate.aether :as aether])
   (:import (java.util.zip ZipFile)
            (java.io InputStreamReader)))
@@ -69,7 +70,7 @@
       (project/init-project (project/read path)))
 
     :else
-    (throw (IllegalArgumentException. "parent-project configuration must include either 'coords' or 'path'"))))
+    (main/warn "WARNING: :parent-project does not specify :coords or :path, so no parent project will be loaded.")))
 
 (defn parent-properties
   [proj ks]

@@ -53,9 +53,6 @@
       plugin/middleware))
 
 (deftest parent-project-specification-test
-  (testing "Error thrown if neither path nor coords provided"
-    (is (thrown-with-msg? IllegalArgumentException #"must include either 'coords' or 'path'"
-          (read-child-project "with_no_parent_coords_or_path"))))
   (testing "parent projects can be loaded by path"
     (let [project (read-child-project "with_parent_path")]
       (is (= "foo" (:foo project)))))
