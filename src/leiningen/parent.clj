@@ -45,8 +45,10 @@
     (make-absolute root path)))
 
 (defn resolve-project-from-coords
-  [coords]
-  (let [resolved-parent-artifact (first (aether/resolve-artifacts :coordinates [coords]))
+  [coords repositories]
+  (let [resolved-parent-artifact (first (first (aether/resolve-dependencies
+                                                 :coordinates [coords]
+                                                 :repositories repositories)))
         artifact-jar (:file (meta resolved-parent-artifact))
         artifact-zip (ZipFile. artifact-jar)]
     (project/init-project (project/read (InputStreamReader. (.getInputStream
@@ -57,7 +59,7 @@
   [project {:keys [path coords]}]
   (cond
     coords
-    (resolve-project-from-coords coords)
+    (resolve-project-from-coords coords (:repositories project))
 
     path
     (let [path (resolve-path (:root project) path)]

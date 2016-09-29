@@ -6,7 +6,7 @@
             [leiningen.core.project :as project]
             [leiningen.install :as install])
   (:import (java.io FileNotFoundException)
-           (org.sonatype.aether.resolution ArtifactResolutionException)))
+           (org.sonatype.aether.resolution DependencyResolutionException)))
 
 (def m {:a 1
         :b 2
@@ -71,8 +71,8 @@
     (let [project (read-child-project "with_parent_coords")]
       (is (= "foo" (:foo project)))))
   (testing "Error thrown if non-existent coords provided"
-    (is (thrown? ArtifactResolutionException
-          (read-child-project "with_invalid_parent_coords")))))
+    (is (thrown? DependencyResolutionException
+                 (read-child-project "with_invalid_parent_coords")))))
 
 (deftest inherited-values-test
   (testing "managed_dependencies can be inherited from parent"
