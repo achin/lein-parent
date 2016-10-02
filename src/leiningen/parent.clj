@@ -1,6 +1,7 @@
 (ns leiningen.parent
   (:require [clojure.pprint :as pp]
             [leiningen.core.project :as project]
+            [leiningen.core.main :as main]
             [cemerick.pomegranate.aether :as aether])
   (:import (java.util.zip ZipFile)
            (java.io InputStreamReader)))
@@ -45,8 +46,11 @@
     (make-absolute root path)))
 
 (defn resolve-project-from-coords
-  [coords]
-  (let [resolved-parent-artifact (first (aether/resolve-artifacts :coordinates [coords]))
+  [coords {:keys [repositories offline?]}]
+  (let [resolved-parent-artifact (first (first (aether/resolve-dependencies
+                                                 :coordinates [coords]
+                                                 :repositories repositories
+                                                 :offline? offline?)))
         artifact-jar (:file (meta resolved-parent-artifact))
         artifact-zip (ZipFile. artifact-jar)]
     (project/init-project (project/read (InputStreamReader. (.getInputStream
@@ -57,14 +61,16 @@
   [project {:keys [path coords]}]
   (cond
     coords
-    (resolve-project-from-coords coords)
+    (resolve-project-from-coords
+      coords
+      project)
 
     path
     (let [path (resolve-path (:root project) path)]
       (project/init-project (project/read path)))
 
     :else
-    (throw (IllegalArgumentException. "parent-project configuration must include either 'coords' or 'path'"))))
+    (main/warn "WARNING: :parent-project does not specify :coords or :path, so no parent project will be loaded.")))
 
 (defn parent-properties
   [proj ks]
