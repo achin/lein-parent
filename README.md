@@ -65,14 +65,14 @@ For example:
                             [ring/ring-codec "1.0.1"]])
 
 (defproject superfun/kid-a "1.0.0-SNAPSHOT"
-   :parent-project [:coords [superfun/myparent "1.0.0"]
-                    :inherit [:managed-dependencies]]
+   :parent-project {:coords [superfun/myparent "1.0.0"]
+                    :inherit [:managed-dependencies]}
    :dependencies [[clj-time]
                   [me.raynes/fs]])
 
 (defproject superfun/kid-b "1.0.0-SNAPSHOT"
- :parent-project [:coords [superfun/myparent "1.0.0"]
-                  :inherit [:managed-dependencies]]
+ :parent-project {:coords [superfun/myparent "1.0.0"]
+                  :inherit [:managed-dependencies]}
  :dependencies [[clj-time]
                 [ring/ring-codec]])
 ```
