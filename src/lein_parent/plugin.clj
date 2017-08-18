@@ -6,5 +6,6 @@
 
 (defn middleware [project]
   (if-let [inherited (parent/inherited-properties project)]
-    (meta-merge project inherited)
+    (with-meta (meta-merge project inherited)
+               (update (meta project) :profiles merge (:profiles inherited)))
     project))

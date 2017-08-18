@@ -75,4 +75,15 @@
   (testing "managed_dependencies can be inherited from parent"
     (let [project (read-child-project "with_parent_with_managed_deps")]
       (is (= [['clj-time "0.5.1"] ['ring/ring-codec "1.0.1"]]
-             (:managed-dependencies project))))))
+             (:managed-dependencies project)))))
+
+  (testing "profiles can be inherited from parent"
+    (testing "when the profile is activated"
+      ;; with-profiles calls the set-profiles function to 'activate' selected profiles
+      (let [project (project/set-profiles (read-child-project "with_parent_with_profile") [:foo])]
+        (is (= "bar" (:bar project)))))
+    (testing "when the profile is not activated, the profile is still available in the project"
+      ;; with-profiles calls the set-profiles function to 'activate' selected profiles
+      (let [project (read-child-project "with_parent_with_profile")]
+        (is (nil? (:bar project)))
+        (is (= "bar" (get-in project [:profiles :foo :bar])))))))
