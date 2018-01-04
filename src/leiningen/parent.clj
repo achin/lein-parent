@@ -52,10 +52,11 @@
                                                  :repositories repositories
                                                  :offline? offline?)))
         artifact-jar (:file (meta resolved-parent-artifact))
-        artifact-zip (ZipFile. artifact-jar)]
+        artifact-zip (ZipFile. artifact-jar)
+        project-clj-path (format "META-INF/leiningen/%s/project.clj" (first coords))]
     (project/init-project (project/read (InputStreamReader. (.getInputStream
                                           artifact-zip
-                                          (.getEntry artifact-zip "project.clj")))))))
+                                          (.getEntry artifact-zip project-clj-path)))))))
 
 (defn get-parent-project
   [project {:keys [path coords]}]
