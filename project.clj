@@ -1,4 +1,4 @@
-(defproject lein-parent "0.3.3-SNAPSHOT"
+(defproject lein-parent "0.3.3"
   :description "Leiningen plugin for inheriting properties from a parent project"
   :url "https://github.com/achin/lein-parent"
   :license {:name "Eclipse Public License"
