@@ -45,12 +45,17 @@
     path
     (make-absolute root path)))
 
+; Copied from leiningen.core.classpath
+(defn update-policies [update checksum [repo-name opts]]
+  [repo-name (merge {:update (or update :daily)
+                     :checksum (or checksum :fail)} opts)])
+
 (defn resolve-project-from-coords
-  [coords {:keys [repositories offline?]}]
-  (let [resolved-parent-artifact (first (first (aether/resolve-dependencies
-                                                 :coordinates [coords]
-                                                 :repositories repositories
-                                                 :offline? offline?)))
+  [coords {:keys [repositories offline? update checksum]}]
+  (let [resolved-parent-artifact (ffirst (aether/resolve-dependencies
+                                           :coordinates [coords]
+                                           :repositories (map (partial update-policies update checksum) repositories)
+                                           :offline? offline?))
         artifact-jar (:file (meta resolved-parent-artifact))
         artifact-zip (ZipFile. artifact-jar)
         project-clj-path (format "META-INF/leiningen/%s/project.clj" (first coords))]
