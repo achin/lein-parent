@@ -12,7 +12,7 @@ lein-parent is the conceptual reverse of
 
 ## Usage
 
-Put `[lein-parent "0.3.3"]` into the `:plugins` vector of your project.clj.
+Put `[lein-parent "0.3.4"]` into the `:plugins` vector of your project.clj.
 
 Specify a parent in your project.clj and which properties to inherit from it as
 follows.
