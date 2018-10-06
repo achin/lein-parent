@@ -52,10 +52,10 @@
 
 (defn resolve-project-from-coords
   [coords {:keys [repositories offline? update checksum]}]
-  (let [resolved-parent-artifact (ffirst (aether/resolve-dependencies
-                                           :coordinates [coords]
-                                           :repositories (map (partial update-policies update checksum) repositories)
-                                           :offline? offline?))
+  (let [resolved-parent-artifact (first (aether/resolve-artifacts
+                                          :coordinates [coords]
+                                          :repositories (map (partial update-policies update checksum) repositories)
+                                          :offline? offline?))
         artifact-jar (:file (meta resolved-parent-artifact))
         artifact-zip (ZipFile. artifact-jar)
         project-clj-path (format "META-INF/leiningen/%s/project.clj" (first coords))]
