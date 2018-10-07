@@ -68,7 +68,11 @@
       (is (= "foo" (:foo project)))))
   (testing "Error thrown if non-existent coords provided"
     (is (thrown-with-msg? Exception #"Could not find artifact lein-parent:does-not-exist"
-                         (read-child-project "with_invalid_parent_coords")))))
+                         (read-child-project "with_invalid_parent_coords"))))
+  (testing "parent projects can be loaded by coordinates and contain dev plugins"
+    (install/install (project/read (parent-path "with_profile_plugin")))
+    (let [project (read-child-project "with_parent_profile_plugin")]
+      (is (= [['venantius/ultra "0.5.2"]] (get-in project [:profiles :dev :plugins]))))))
 
 (deftest inherited-values-test
   (testing "managed_dependencies can be inherited from parent"
