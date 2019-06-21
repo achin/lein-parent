@@ -2,6 +2,7 @@
   (:require [clojure.pprint :as pp]
             [leiningen.core.project :as project]
             [leiningen.core.main :as main]
+            [leiningen.core.classpath :as classpath]
             [cemerick.pomegranate.aether :as aether])
   (:import (java.util.zip ZipFile)
            (java.io InputStreamReader)))
@@ -54,7 +55,8 @@
   [coords {:keys [repositories offline? update checksum]}]
   (let [resolved-parent-artifact (first (aether/resolve-artifacts
                                           :coordinates [coords]
-                                          :repositories (map (partial update-policies update checksum) repositories)
+                                          :repositories (map (comp (partial update-policies update checksum) classpath/add-repo-auth)
+                                                             repositories)
                                           :offline? offline?))
         artifact-jar (:file (meta resolved-parent-artifact))
         artifact-zip (ZipFile. artifact-jar)
