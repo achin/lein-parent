@@ -6,5 +6,5 @@
   :eval-in-leiningen true
   :dependencies [[com.cemerick/pomegranate "0.3.1"]
                  [org.codehaus.plexus/plexus-utils "3.0"]]
-  :plugins [[lein-midje "3.1.3"]]
-  :profiles {:dev {:dependencies [[midje "1.6.3"]]}})
+  :plugins [[lein-midje "3.2.1"]]
+  :profiles {:dev {:dependencies [[midje "1.9.8"]]}})
