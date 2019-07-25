@@ -4,7 +4,6 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :eval-in-leiningen true
-  :dependencies [[com.cemerick/pomegranate "0.3.1"]
-                 [org.codehaus.plexus/plexus-utils "3.0"]]
   :plugins [[lein-midje "3.2.1"]]
-  :profiles {:dev {:dependencies [[midje "1.9.8"]]}})
+  :profiles {:dev {:dependencies [[midje "1.9.8"]
+                                  [com.cemerick/pomegranate "0.3.1"]]}})
