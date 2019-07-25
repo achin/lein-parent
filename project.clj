@@ -6,4 +6,4 @@
   :eval-in-leiningen true
   :plugins [[lein-midje "3.2.1"]]
   :profiles {:dev {:dependencies [[midje "1.9.8"]
-                                  [com.cemerick/pomegranate "0.3.1"]]}})
+                                  [com.cemerick/pomegranate "1.1.0"]]}})
