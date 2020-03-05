@@ -51,6 +51,15 @@
   [repo-name (merge {:update (or update :daily)
                      :checksum (or checksum :fail)} opts)])
 
+(defn- read-project
+  [file]
+  ;; Leiningen 2.5 introduced read-raw and changed read to call init-project
+  ;; automatically. By detecting the existance of read-raw we can avoid a
+  ;; redundant call to init-project.
+  (if (resolve 'leiningen.core.project/read-raw)
+    (project/read file)
+    (project/init-project (project/read file))))
+
 (defn resolve-project-from-coords
   [coords {:keys [repositories offline? update checksum]}]
   (let [resolved-parent-artifact (first (aether/resolve-artifacts
@@ -61,9 +70,9 @@
         artifact-jar (:file (meta resolved-parent-artifact))
         artifact-zip (ZipFile. artifact-jar)
         project-clj-path (format "META-INF/leiningen/%s/project.clj" (first coords))]
-    (project/init-project (project/read (InputStreamReader. (.getInputStream
-                                          artifact-zip
-                                          (.getEntry artifact-zip project-clj-path)))))))
+    (read-project (InputStreamReader. (.getInputStream
+                    artifact-zip
+                    (.getEntry artifact-zip project-clj-path))))))
 
 (defn get-parent-project
   [project {:keys [path coords]}]
@@ -75,7 +84,7 @@
 
     path
     (let [path (resolve-path (:root project) path)]
-      (project/init-project (project/read path)))
+      (read-project path))
 
     :else
     (main/warn "WARNING: :parent-project does not specify :coords or :path, so no parent project will be loaded.")))
