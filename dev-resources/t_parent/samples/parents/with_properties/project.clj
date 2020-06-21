@@ -1,3 +1,4 @@
-(defproject lein-parent/parent-with-foo-property "0.0.1"
-  :description "Parent project that provides a property 'foo'"
-  :foo "foo")
+(defproject lein-parent/parent-with-properties "0.0.1"
+  :description "Parent project that provides some properties"
+  :foo "foo"
+  :bar "bar")
