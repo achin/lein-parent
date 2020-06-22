@@ -63,7 +63,7 @@
       (catch Exception e
         (is (instance? FileNotFoundException (.getCause e))))))
   (testing "parent projects can be loaded by coordinates"
-    (install/install (project/read (parent-path "with_foo_property")))
+    (install/install (project/read (parent-path "with_properties")))
     (let [project (read-child-project "with_parent_coords")]
       (is (= "foo" (:foo project)))))
   (testing "Error thrown if non-existent coords provided"
@@ -89,4 +89,9 @@
       ;; with-profiles calls the set-profiles function to 'activate' selected profiles
       (let [project (read-child-project "with_parent_with_profile")]
         (is (nil? (:bar project)))
-        (is (= "bar" (get-in project [:profiles :foo :bar])))))))
+        (is (= "bar" (get-in project [:profiles :foo :bar]))))))
+
+  (testing "all properties can be inherited from parent"
+    (let [project (read-child-project "with_parent_inherit_all")]
+      (is (= {:foo "foo" :bar "bar"}
+             (select-keys project [:foo :bar]))))))
