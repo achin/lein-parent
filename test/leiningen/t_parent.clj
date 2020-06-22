@@ -94,4 +94,10 @@
   (testing "all properties can be inherited from parent"
     (let [project (read-child-project "with_parent_inherit_all")]
       (is (= {:foo "foo" :bar "bar"}
-             (select-keys project [:foo :bar]))))))
+             (select-keys project [:foo :bar])))))
+
+  (testing "child has higher priority in merges"
+    (let [project (read-child-project "with_parent_with_aliases")]
+      (is (= {"my-alias" ["child"]
+              "my-alias-2" ["parent"]}
+             (select-keys (:aliases project) ["my-alias" "my-alias-2"]))))))
