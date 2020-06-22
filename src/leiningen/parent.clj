@@ -95,6 +95,22 @@
                          (keys (dissoc proj :name))
                          ks)))
 
+(defn handle-lein-defaults
+  ;; The child project has priority in the merge, including the
+  ;; default properties added by Leiningen. To avoid overwriting
+  ;; parent-provided values by default ones, they are removed from the
+  ;; child project before merging. The default values are still
+  ;; present in the parent map, so they will merged back in if needed.
+
+  ;; Potential issue if using inherit 'all': parent contains a field
+  ;; the child wants to overwrite with a value equal to the default.
+  [project]
+  (reduce (fn [child [k v]]
+            (if (= (get child k) v)
+              (dissoc child k)
+              child))
+          project project/defaults))
+
 (defn inherited-properties
   [project]
   (when-let [parent-project (:parent-project project)]

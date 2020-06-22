@@ -100,4 +100,9 @@
     (let [project (read-child-project "with_parent_with_aliases")]
       (is (= {"my-alias" ["child"]
               "my-alias-2" ["parent"]}
-             (select-keys (:aliases project) ["my-alias" "my-alias-2"]))))))
+             (select-keys (:aliases project) ["my-alias" "my-alias-2"])))))
+
+  (testing "parent has higher priority than lein default values"
+    (let [project (read-child-project "with_parent_inherit_all")]
+      (is (= :abort
+             (:pedantic? project))))))
