@@ -104,9 +104,10 @@
 
   ;; Potential issue if using inherit 'all': parent contains a field
   ;; the child wants to overwrite with a value equal to the default.
-  [project]
-  (reduce (fn [child [k v]]
-            (if (= (get child k) v)
+  [project inherited]
+  (reduce (fn [child [k default-val]]
+            (if (and (contains? inherited k)
+                     (= (get child k) default-val))
               (dissoc child k)
               child))
           project project/defaults))
