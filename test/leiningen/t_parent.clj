@@ -1,11 +1,14 @@
 (ns leiningen.t-parent
-  (:use [midje.sweet])
-  (:require [leiningen.parent :as p]
-            [lein-parent.plugin :as plugin]
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]
             [clojure.test :refer :all]
+            [lein-parent.plugin :as plugin]
+            leiningen.core.main
             [leiningen.core.project :as project]
-            [leiningen.install :as install])
-  (:import (java.io FileNotFoundException)))
+            [leiningen.install :as install]
+            [leiningen.parent :as p]
+            [midje.sweet :refer :all])
+  (:import java.io.FileNotFoundException))
 
 (def m {:a 1
         :b 2
@@ -31,62 +34,192 @@
   (p/select-keys-in m [:a [:d 4]])   => (just {:a 1
                                                :d {4 :red}}))
 
+;; Test helpers
 
-(defn test-proj-path
-  [kind proj-name]
-  (str "./dev-resources/t_parent/samples/" kind "/" proj-name "/project.clj"))
+(defn delete-files-recursively
+  [f1]
+  (when (.isDirectory (io/file f1))
+    (doseq [f2 (.listFiles (io/file f1))]
+      (delete-files-recursively f2)))
+  (io/delete-file f1))
 
-(defn child-path
-  [proj-name]
-  (test-proj-path "children" proj-name))
+(def test-ground-path "test/test_ground/")
 
-(defn parent-path
-  [proj-name]
-  (test-proj-path "parents" proj-name))
+(defn delete-test-ground
+  []
+  (when (.exists (io/file test-ground-path))
+    (delete-files-recursively test-ground-path)))
 
-(defn read-child-project
-  [proj-name]
-  (-> proj-name
-      child-path
+(defn spit-project
+  "Generates a 'project.clj' file that can be read by Leiningen."
+  [project-name project-map]
+  (let [version "0.0.1"
+        full-name (symbol (str (symbol (str *ns*) project-name)))
+        coords [full-name version]
+        filename (-> (str/replace project-name #"-" "_"))
+        filepath (io/file test-ground-path filename "project.clj")]
+    (io/make-parents filepath)
+    (->> (reduce into project-map)
+         (into ['defproject full-name version])
+         (seq)
+         (spit filepath))
+    {:filename filename
+     :filepath filepath
+     :coords coords}))
+
+(defn with-install
+  "Installs project such that it can be used with :coords"
+  [spat]
+  (binding [leiningen.core.main/*info* false]
+    (install/install (project/read (str (:filepath spat))))
+    spat))
+
+(defn read-project
+  [spat]
+  (-> (:filepath spat)
+      str
       project/read
       plugin/middleware))
 
-(deftest parent-project-specification-test
-  (testing "parent projects can be loaded by path"
-    (let [project (read-child-project "with_parent_path")]
-      (is (= "foo" (:foo project)))))
+(defn relative
+  "Shorthand to obtain the relative path to the project."
+  [spat]
+  (str "../" (:filename spat) "/project.clj"))
+
+
+;; Start tests
+
+(deftest parent-loading
   (testing "Error thrown if non-existent path provided"
+    (delete-test-ground)
     (try
-      (read-child-project "with_invalid_parent_path")
+      (let [parent (spit-project "parent" {:foo "foo"})
+            child-project (->> {:parent-project {:path    (str (relative parent) "-nonexistent")}}
+                               (spit-project "child")
+                               (read-project))])
       ;; should not get here!
       (is (true? false) "Exception should have been thrown by call to 'read-project'!")
       (catch Exception e
         (is (instance? FileNotFoundException (.getCause e))))))
-  (testing "parent projects can be loaded by coordinates"
-    (install/install (project/read (parent-path "with_foo_property")))
-    (let [project (read-child-project "with_parent_coords")]
-      (is (= "foo" (:foo project)))))
+
+
   (testing "Error thrown if non-existent coords provided"
+    (delete-test-ground)
     (is (thrown-with-msg? Exception #"Could not find artifact lein-parent:does-not-exist"
-                         (read-child-project "with_invalid_parent_coords"))))
-  (testing "parent projects can be loaded by coordinates and contain dev plugins"
-    (install/install (project/read (parent-path "with_profile_plugin")))
-    (let [project (read-child-project "with_parent_profile_plugin")]
-      (is (= [['venantius/ultra "0.5.2"]] (get-in project [:profiles :dev :plugins]))))))
+                          (let [parent (spit-project "parent" {:foo "foo"})
+                                child-project (->> {:parent-project {:coords  '[lein-parent/does-not-exist "0.0.1"]}}
+                                                   (spit-project "child")
+                                                   (read-project))]))))
 
-(deftest inherited-values-test
-  (testing "managed_dependencies can be inherited from parent"
-    (let [project (read-child-project "with_parent_with_managed_deps")]
-      (is (= [['clj-time "0.5.1"] ['ring/ring-codec "1.0.1"]]
-             (:managed-dependencies project)))))
+  (testing "parent can be loaded by path"
+    (delete-test-ground)
+    (let [parent (spit-project "parent" {:foo "foo"})
+          child-project (->> {:parent-project {:path    (relative parent)
+                                               :inherit [:foo]}}
+                             (spit-project "child")
+                             (read-project))]
+      (is (= "foo" (:foo child-project)))))
 
-  (testing "profiles can be inherited from parent"
-    (testing "when the profile is activated"
+  (testing "parent can be loaded by coordinates"
+    (delete-test-ground)
+    (let [parent (-> (spit-project "parent" {:foo "foo"})
+                     (with-install))
+          child-project (->> {:parent-project {:coords  (:coords parent)
+                                               :inherit [:foo]}}
+                             (spit-project "child")
+                             (read-project))]
+      (is (= "foo" (:foo child-project))))))
+
+(deftest parent-profiles
+  (delete-test-ground)
+  (let [parent (spit-project "parent" {:profiles {:foo {:bar "bar"}}})
+        child-project (->> {:parent-project {:path    (relative parent)
+                                             :inherit [[:profiles]]}}
+                           (spit-project "child")
+                           (read-project))]
+    (testing "properties are merged when the profile is activated"
       ;; with-profiles calls the set-profiles function to 'activate' selected profiles
-      (let [project (project/set-profiles (read-child-project "with_parent_with_profile") [:foo])]
-        (is (= "bar" (:bar project)))))
+      (is (= "bar" (:bar (project/set-profiles child-project [:foo])))))
+
     (testing "when the profile is not activated, the profile is still available in the project"
-      ;; with-profiles calls the set-profiles function to 'activate' selected profiles
-      (let [project (read-child-project "with_parent_with_profile")]
-        (is (nil? (:bar project)))
-        (is (= "bar" (get-in project [:profiles :foo :bar])))))))
+      (is (nil? (:bar child-project)))
+      (is (= "bar" (get-in child-project [:profiles :foo :bar]))))))
+
+(deftest inherited-properties
+  (testing "properties inherited can be ALL"
+    (delete-test-ground)
+    (let [parent-properties {:profiles  {:foo {:bar "bar"}}
+                             :prop1     "value1"
+                             :prop2     "value2"
+                             :pedantic? :abort}
+          parent (spit-project "parent" parent-properties)
+          child-project (->> {:parent-project {:path    (relative parent)
+                                               :inherit [:leiningen.parent/all]}}
+                             (spit-project "child")
+                             (read-project))]
+      (is (every? #(= (get child-project %)
+                      (get parent-properties %)) (keys parent-properties)))))
+
+  (testing "managed_dependencies can be inherited from parent"
+    (delete-test-ground)
+    (let [parent (spit-project "parent" {:managed-dependencies '[[clj-time "0.5.1"]
+                                                                 [ring/ring-codec "1.0.1"]]})
+          child-project (->> {:parent-project {:path    (relative parent)
+                                               :inherit [:managed-dependencies]}}
+                             (spit-project "child")
+                             (read-project))]
+      (is (= '[[clj-time "0.5.1"] [ring/ring-codec "1.0.1"]]
+             (:managed-dependencies child-project)))))
+
+  (testing "child has higher priority in merges"
+    (delete-test-ground)
+    (let [parent (spit-project "parent" {:aliases {"my-alias"   ["parent"]
+                                                   "my-alias-2" ["parent"]}})
+          child-project (->> {:parent-project {:path    (relative parent)
+                                               :inherit [:aliases]}
+                              :aliases        {"my-alias" ["child"]}}
+                             (spit-project "child")
+                             (read-project))]
+      (is (= {"my-alias"   ["child"]
+              "my-alias-2" ["parent"]}
+             (select-keys (:aliases child-project) ["my-alias" "my-alias-2"])))))
+
+  (testing "plugins are merged"
+    (delete-test-ground)
+    (let [parent (spit-project "parent" {:plugins '[[venantius/ultra "0.5.2"]]})
+          child-project (->> {:parent-project {:path    (relative parent)
+                                               :inherit [:plugins]}
+                              :plugins        '[[lein-pprint/lein-pprint "1.3.2"]]}
+                             (spit-project "child")
+                             (read-project))]
+      (is (some #{'[venantius/ultra "0.5.2"]} (:plugins child-project)))
+      (is (some #{'[lein-pprint/lein-pprint "1.3.2"]} (:plugins child-project)))))
+
+  (testing "handle lein defaults"
+    (testing "with value inherited from parent"
+      (delete-test-ground)
+      (let [parent (spit-project "parent" {:pedantic? :parent})
+            child-project (->> {:parent-project {:path    (relative parent)
+                                                 :inherit [:pedantic?]}}
+                               (spit-project "child")
+                               (read-project))]
+        (is (= :parent (:pedantic? child-project)))))
+
+    (testing "with value provided by child"
+      (delete-test-ground)
+      (let [parent (spit-project "parent" {:pedantic? :parent})
+            child-project (->> {:parent-project {:path    (relative parent)
+                                                 :inherit [:pedantic?]}
+                                :pedantic?      :child}
+                               (spit-project "child")
+                               (read-project))]
+        (is (= :child (:pedantic? child-project)))))
+
+    (testing "without inheritance"
+      (delete-test-ground)
+      (let [parent (spit-project "parent" {})
+            child-project (->> {:parent-project {:path    (relative parent)
+                                                 :inherit []}}
+                               (spit-project "child")
+                               (read-project))]
+        (is (= (:pedantic? project/defaults) (:pedantic? child-project)))))))
