@@ -92,7 +92,9 @@
 
 (defn parent-properties
   [proj ks]
-  (select-keys-in proj ks))
+  (select-keys-in proj (if (some #{::all} ks)
+                         (keys (dissoc proj :name))
+                         ks)))
 
 (defn inherited-properties
   [project]
