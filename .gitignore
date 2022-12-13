@@ -1,6 +1,7 @@
 /target
 /classes
 /checkouts
+/test/test_ground
 pom.xml
 pom.xml.asc
 *.jar
